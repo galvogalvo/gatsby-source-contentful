@@ -36,6 +36,10 @@ const getBase64Image = imageProps => {
   // TODO add caching.
   return new Promise(resolve => {
     base64Img.requestBase64(requestUrl, (a, b, body) => {
+      if(b.headers['content-length'] > 4000 || b.headers['x-cache'] !== 'Hit from cloudfront'){
+        console.log(`oversize base64: ${requestUrl}`)
+        console.log(b.headers)
+      }
       resolve(body)
     })
   })
