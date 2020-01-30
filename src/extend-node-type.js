@@ -41,6 +41,7 @@ const getBase64Image = imageProps => {
       }
       if(b !== undefined && b.headers && !b.headers['x-cache'] || b !== undefined && b.headers && b.headers['x-cache'] !== 'Hit from cloudfront'){
         console.log(`request not cached`)
+        console.log(requestUrl)
         console.log(b.headers)
       }
       if(b !== undefined  && !b.headers){
@@ -48,6 +49,7 @@ const getBase64Image = imageProps => {
       }
 
       if(b === undefined && a){
+        console.log(requestUrl)
         console.log(a)
       }
       resolve(body)
