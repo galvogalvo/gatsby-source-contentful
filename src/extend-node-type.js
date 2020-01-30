@@ -39,7 +39,7 @@ const getBase64Image = imageProps => {
       if(b !== undefined && b.headers && b.headers['content-length'] > 5000){
         console.log(`oversize base64: ${requestUrl}`)
       }
-      if(b !== undefined && b.headers && !b.headers['x-cache'] || b.headers['x-cache'] !== 'Hit from cloudfront'){
+      if(b !== undefined && b.headers && !b.headers['x-cache'] || b !== undefined && b.headers && b.headers['x-cache'] !== 'Hit from cloudfront'){
         console.log(`request not cached`)
         console.log(b.headers)
       }
