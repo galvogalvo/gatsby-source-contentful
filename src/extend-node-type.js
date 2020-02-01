@@ -90,14 +90,14 @@ const getBase64Image = (imageProps) => {
   
 };
 
-const getBase64 = (url) => {
+const getBase64 = url => {
   // console.log(`fetching base64: ${url}`)
-  return axios
-    .get(url, {
-      responseType: 'arraybuffer'
-    })
-    .then(response => new Buffer(response.data, 'binary').toString('base64'))
-}
+  return axios.get(url, {
+    responseType: 'arraybuffer'
+  }).then(
+    response => `data:${response.headers['content-type']};base64,${new Buffer(response.data, 'binary').toString('base64')}`
+  );
+};
 
 const getBasicImageProps = (image, args) => {
   let aspectRatio;
