@@ -20,7 +20,6 @@ const _ = require(`lodash`);
 const path = require(`path`);
 
 const cacheImage = require(`./cache-image`);
-const cacheBase64 = require(`./cache-base64`);
 
 const {
   resolve,
