@@ -53,7 +53,7 @@ const getBase64Image = (imageProps) => {
   if (!imageProps) return null;
   let requestUrl = `https:${imageProps.baseUrl}?w=20`;
   const DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX = /images.ctfassets.net|assets.ctfassets.net/g
-  const base64MediaDomain = pluginConfig.get(`base64MediaDomain`) //'media.tbvsc.com'
+  const base64MediaDomain = process.env.MEDIA_DOMAIN; //'media.tbvsc.com'
   requestUrl = requestUrl.replace(DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX, base64MediaDomain)
   
   const CACHE_DIR = resolve(`.cache/contentful/base64/`);

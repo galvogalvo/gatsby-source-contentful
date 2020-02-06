@@ -9,7 +9,6 @@ const defaultOptions = {
   downloadLocal: false,
   localeFilter: () => true,
   forceFullSync: false,
-  base64MediaDomain: false,
 }
 
 const createPluginConfig = pluginOptions => {
@@ -25,7 +24,6 @@ const optionsSchema = Joi.object().keys({
   accessToken: Joi.string()
     .required()
     .empty(),
-  base64MediaDomain: Joi.string(),
   spaceId: Joi.string()
     .required()
     .empty(),
