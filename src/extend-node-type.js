@@ -51,9 +51,10 @@ const isImage = image => _.includes([`image/jpeg`, `image/jpg`, `image/png`, `im
 const getBase64Image = (imageProps) => {
 
   if (!imageProps) return null;
-  let requestUrl = `https:${imageProps.baseUrl}?w=20`; // TODO add caching.
+  let requestUrl = `https:${imageProps.baseUrl}?w=20`;
   const DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX = /images.ctfassets.net|assets.ctfassets.net/g
-  requestUrl = requestUrl.replace(DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX, 'media.tbvsc.com')
+  const base64MediaDomain = pluginConfig.get(`base64MediaDomain`) //'media.tbvsc.com'
+  requestUrl = requestUrl.replace(DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX, base64MediaDomain)
   
   const CACHE_DIR = resolve(`.cache/contentful/base64/`);
   const hash = crypto.createHash(`md5`).update(requestUrl).digest(`hex`);
@@ -62,41 +63,36 @@ const getBase64Image = (imageProps) => {
 
   return new Promise(resolve => {
 
-  pathExists(path).then(function(alreadyExists){
-
-
+  pathExists(path).then(function(alreadyExists){ 
                     //if exists in file system return cached
                     if(alreadyExists === true){
                       //return cached
-                      // console.log('base image cached')
                       const body = readFileSync(path).toString()
                       resolve(body)
 
                     } else {
-                        // console.log(`base 64 image not cached`)
                         getBase64(requestUrl, (body) => {
                           // console.log(body)
                         }).then(function(body){
-                          // console.log(body)
+                          
                           outputFile(path, body).then(() => {
                             resolve(body)
-                          });
-                        });
+                          }).catch(error => console.log(`error creating base64 cache file: ${error} `) );
+                        }).catch(error =>  console.log(error))
+                    }
 
-                  }
-
-                  });
+                  }).catch(error => console.log(`error with base64 cache URL: ${error}`))
   });
   
 };
 
-const getBase64 = url => {
-  // console.log(`fetching base64: ${url}`)
+const getBase64 = url => { 
+  
   return axios.get(url, {
     responseType: 'arraybuffer'
   }).then(
     response => `data:${response.headers['content-type']};base64,${new Buffer(response.data, 'binary').toString('base64')}`
-  );
+  ).catch(error => console.log(error));
 };
 
 const getBasicImageProps = (image, args) => {
