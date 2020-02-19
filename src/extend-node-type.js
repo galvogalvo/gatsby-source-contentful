@@ -53,10 +53,13 @@ const getBase64Image = (imageProps) => {
   if (!imageProps) return null;
   let requestUrl = `https:${imageProps.baseUrl}?w=20`;
   const DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX = /images.ctfassets.net|assets.ctfassets.net/g
+  let base64MediaDomain = 'media.tbvsc.com'
   if(process.env.MEDIA_DOMAIN){
-    const base64MediaDomain = process.env.MEDIA_DOMAIN; //'media.tbvsc.com'
-    requestUrl = requestUrl.replace(DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX, base64MediaDomain)
+   base64MediaDomain = process.env.MEDIA_DOMAIN; //'media.tbvsc.com'
   }
+    requestUrl = requestUrl.replace(DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX, base64MediaDomain)
+
+  console.log(requestUrl)
   
   const CACHE_DIR = resolve(`.cache/contentful/base64/`);
   const hash = crypto.createHash(`md5`).update(requestUrl).digest(`hex`);
