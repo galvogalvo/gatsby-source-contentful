@@ -59,8 +59,6 @@ const getBase64Image = (imageProps) => {
   }
     requestUrl = requestUrl.replace(DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX, base64MediaDomain)
 
-  console.log(requestUrl)
-  
   const CACHE_DIR = resolve(`.cache/contentful/base64/`);
   const hash = crypto.createHash(`md5`).update(requestUrl).digest(`hex`);
   const path = resolve(CACHE_DIR, `${hash}`);
