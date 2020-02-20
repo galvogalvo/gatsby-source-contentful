@@ -15,6 +15,7 @@ module.exports = async ({ syncToken, reporter, pluginConfig }) => {
     accessToken: pluginConfig.get(`accessToken`),
     host: pluginConfig.get(`host`),
     environment: pluginConfig.get(`environment`),
+    proxy: pluginConfig.get(`proxy`),
   }
 
   const client = contentful.createClient(contentfulClientOptions)
@@ -23,10 +24,12 @@ module.exports = async ({ syncToken, reporter, pluginConfig }) => {
   // {'locale': value} } so we need to get the space and its default local.
   //
   // We'll extend this soon to support multiple locales.
+  let space
   let locales
   let defaultLocale = `en-US`
   try {
     console.log(`Fetching default locale`)
+    space = await client.getSpace()
     locales = await client.getLocales().then(response => response.items)
     defaultLocale = _.find(locales, { default: true }).code
     locales = locales.filter(pluginConfig.get(`localeFilter`))
@@ -36,6 +39,11 @@ module.exports = async ({ syncToken, reporter, pluginConfig }) => {
     let errors
     if (e.code === `ENOTFOUND`) {
       details = `You seem to be offline`
+    } else if (e.code === `SELF_SIGNED_CERT_IN_CHAIN`) {
+      reporter.panic(
+        `We couldn't make a secure connection to your contentful space. Please check if you have any self-signed SSL certificates installed.`,
+        e
+      )
     } else if (e.response) {
       if (e.response.status === 404) {
         // host and space used to generate url
@@ -77,7 +85,9 @@ ${formatPluginOptionsForCLI(pluginConfig.getOriginalPluginOptions(), errors)}`)
   // doesn't support this.
   let contentTypes
   try {
-    contentTypes = await pagedGet(client, `getContentTypes`)
+    const pageLimit = pluginConfig.get(`pageLimit`)
+
+    contentTypes = await pagedGet(client, `getContentTypes`, pageLimit)
   } catch (e) {
     console.log(`error fetching content types`, e)
   }
@@ -85,39 +95,19 @@ ${formatPluginOptionsForCLI(pluginConfig.getOriginalPluginOptions(), errors)}`)
 
   let contentTypeItems = contentTypes.items
 
-  // Fix IDs on entries and assets, created/updated and deleted.
-  contentTypeItems = contentTypeItems.map(c => normalize.fixIds(c))
-
-  currentSyncData.entries = currentSyncData.entries.map(e => {
-    if (e) {
-      return normalize.fixIds(e)
-    }
-    return null
-  })
-  currentSyncData.assets = currentSyncData.assets.map(a => {
-    if (a) {
-      return normalize.fixIds(a)
-    }
-    return null
-  })
-  currentSyncData.deletedEntries = currentSyncData.deletedEntries.map(e => {
-    if (e) {
-      return normalize.fixIds(e)
-    }
-    return null
-  })
-  currentSyncData.deletedAssets = currentSyncData.deletedAssets.map(a => {
-    if (a) {
-      return normalize.fixIds(a)
-    }
-    return null
-  })
+  // Fix IDs (inline) on entries and assets, created/updated and deleted.
+  contentTypeItems.forEach(normalize.fixIds)
+  currentSyncData.entries.forEach(normalize.fixIds)
+  currentSyncData.assets.forEach(normalize.fixIds)
+  currentSyncData.deletedEntries.forEach(normalize.fixIds)
+  currentSyncData.deletedAssets.forEach(normalize.fixIds)
 
   const result = {
     currentSyncData,
     contentTypeItems,
     defaultLocale,
     locales,
+    space,
   }
 
   return result
@@ -131,9 +121,9 @@ ${formatPluginOptionsForCLI(pluginConfig.getOriginalPluginOptions(), errors)}`)
 function pagedGet(
   client,
   method,
+  pageLimit,
   query = {},
   skip = 0,
-  pageLimit = 1000,
   aggregatedResponse = null
 ) {
   return client[method]({
@@ -151,9 +141,9 @@ function pagedGet(
       return pagedGet(
         client,
         method,
+        pageLimit,
         query,
         skip + pageLimit,
-        pageLimit,
         aggregatedResponse
       )
     }
