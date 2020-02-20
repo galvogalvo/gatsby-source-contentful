@@ -16,6 +16,22 @@ const path = require(`path`)
 const cacheImage = require(`./cache-image`)
 
 const {
+  resolve,
+  parse
+} = require(`path`);
+
+const {
+  pathExists,
+  outputFile,
+  ensureDir,
+  readFileSync
+} = require(`fs-extra`);
+
+const crypto = require(`crypto`);
+
+const axios = require(`axios`);
+
+const {
   ImageFormatType,
   ImageResizingBehavior,
   ImageCropFocusType,
@@ -30,17 +46,55 @@ const isImage = image =>
     _.get(image, `file.contentType`)
   )
 
-const getBase64Image = imageProps => {
-  if (!imageProps) return null
+  const getBase64Image = (imageProps) => {
 
-  const requestUrl = `https:${imageProps.baseUrl}?w=20`
-  // TODO add caching.
-  return new Promise(resolve => {
-    base64Img.requestBase64(requestUrl, (a, b, body) => {
-      resolve(body)
-    })
-  })
-}
+    if (!imageProps) return null;
+    let requestUrl = `https:${imageProps.baseUrl}?w=20`;
+    const DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX = /images.ctfassets.net|assets.ctfassets.net/g
+    let base64MediaDomain = 'media.tbvsc.com'
+    if(process.env.MEDIA_DOMAIN){
+     base64MediaDomain = process.env.MEDIA_DOMAIN; //'media.tbvsc.com'
+    }
+      requestUrl = requestUrl.replace(DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX, base64MediaDomain)
+  
+    const CACHE_DIR = resolve(`.cache/contentful/base64/`);
+    const hash = crypto.createHash(`md5`).update(requestUrl).digest(`hex`);
+    const path = resolve(CACHE_DIR, `${hash}`);
+    
+  
+    return new Promise(resolve => {
+  
+    pathExists(path).then(function(alreadyExists){ 
+                      //if exists in file system return cached
+                      if(alreadyExists === true){
+                        //return cached
+                        const body = readFileSync(path).toString()
+                        resolve(body)
+  
+                      } else {
+                          getBase64(requestUrl, (body) => {
+                            // console.log(body)
+                          }).then(function(body){
+                            
+                            outputFile(path, body).then(() => {
+                              resolve(body)
+                            }).catch(error => console.log(`error creating base64 cache file: ${error} `) );
+                          }).catch(error =>  console.log(error))
+                      }
+  
+                    }).catch(error => console.log(`error with base64 cache URL: ${error}`))
+    });
+    
+  };
+  
+  const getBase64 = url => { 
+    
+    return axios.get(url, {
+      responseType: 'arraybuffer'
+    }).then(
+      response => `data:${response.headers['content-type']};base64,${new Buffer(response.data, 'binary').toString('base64')}`
+    ).catch(error => console.log(error));
+  };
 
 const getBasicImageProps = (image, args) => {
   let aspectRatio
