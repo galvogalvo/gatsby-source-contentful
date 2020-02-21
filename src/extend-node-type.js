@@ -57,7 +57,9 @@ const isImage = image =>
     }
       requestUrl = requestUrl.replace(DEFAULT_CONTENTFUL_MEDIA_DOMAIN_REGEX, base64MediaDomain)
   
-    const CACHE_DIR = resolve(`.cache/contentful/base64/`);
+    const cachePath = pluginConfig.get(`cachePath`);  
+    console.log(`cache path is: cachePath`);
+    const CACHE_DIR = resolve(cachePath);
     const hash = crypto.createHash(`md5`).update(requestUrl).digest(`hex`);
     const path = resolve(CACHE_DIR, `${hash}`);
     
