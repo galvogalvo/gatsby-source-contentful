@@ -224,7 +224,11 @@ exports.sourceNodes = async (
     })
   })
 
-  if (pluginConfig.get(`downloadLocal`)) {
+  const downloadLocal = pluginConfig.get(`downloadLocal`)
+  console.error(`****** gatsby-source-contentful/downloadLocal: ${downloadLocal}. ******`)
+  console.log(`typeof: ${typeof downloadLocal }`)
+
+  if (downloadLocal && downloadLocal === true) {
     await downloadContentfulAssets({
       actions,
       createNodeId,
