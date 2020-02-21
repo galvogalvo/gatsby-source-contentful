@@ -13,7 +13,6 @@ const defaultOptions = {
   forceFullSync: false,
   pageLimit: DEFAULT_PAGE_LIMIT,
   useNameForId: true,
-  cachePath: `.cache/contentful/base64/`,
 }
 
 const createPluginConfig = pluginOptions => {
@@ -47,7 +46,6 @@ const optionsSchema = Joi.object().keys({
     }),
   }),
   useNameForId: Joi.boolean(),
-  cachePath: Joi.string(),
   // default plugins passed by gatsby
   plugins: Joi.array(),
 })
